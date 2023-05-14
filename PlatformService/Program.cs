@@ -1,13 +1,15 @@
 using Microsoft.EntityFrameworkCore;
+using PlatformService.AsyncDataServices;
 using PlatformService.Data;
 using PlatformService.SyncDataServices.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
+ConfigurationManager configuration = builder.Configuration; // allows both to access and to set up the config
+IWebHostEnvironment env = builder.Environment;
+
 // Add services to the container.
 builder.Services.AddControllers();
-
-builder.Services.AddScoped<IPlatformRepo, PlatformRepo>();
 
 builder.Services.AddHttpClient<ICommandDataClient, HttpCommandDataClient>();
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -16,14 +18,13 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var app = builder.Build();
-var env = app.Services.GetService<IWebHostEnvironment>();
-var configuration = app.Services.GetService<IConfiguration>();
+builder.Services.AddScoped<IPlatformRepo, PlatformRepo>();
+builder.Services.AddScoped<IMessageBusClient, MessageBusClient>();
 
 if (env.IsProduction())
 {
     Console.WriteLine("--> Using sql server");
-    builder.Services.AddDbContext<AppDbContext>(opt => 
+    builder.Services.AddDbContext<AppDbContext>(opt =>
     opt.UseSqlServer(configuration.GetConnectionString("PlatformsConn")));
 }
 else
@@ -32,8 +33,10 @@ else
     builder.Services.AddDbContext<AppDbContext>(opt => opt.UseInMemoryDatabase("InMem"));
 }
 
-Console.WriteLine($"--> CommandService Endpoint {configuration["CommandService"]}");
+var app = builder.Build();
+
 PrepDb.PrePopulation(app, env.IsProduction());
+Console.WriteLine($"--> CommandService Endpoint {configuration["CommandService"]}");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
