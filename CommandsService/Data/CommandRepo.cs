@@ -18,7 +18,7 @@ namespace CommandsService.Data
             {
                 throw new ArgumentNullException(nameof(command));
             }
-            
+
             command.PlatformId = platformId;
             _context.Commands.Add(command);
         }

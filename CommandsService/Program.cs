@@ -1,16 +1,16 @@
 using CommandsService.AsyncDataServices;
 using CommandsService.Data;
 using CommandsService.EventProcessing;
+using CommandsService.SyncDataServices.Grpc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
-ConfigurationManager configuration = builder.Configuration; // allows both to access and to set up the config
-IWebHostEnvironment env = builder.Environment;
 
 // Add services to the container.
 
 builder.Services.AddDbContext<AppDbContext>(opt => opt.UseInMemoryDatabase("InMem"));
 builder.Services.AddScoped<ICommandRepo, CommandRepo>();
+builder.Services.AddScoped<IPlatformDataClient, PlatformDataClient>();
 builder.Services.AddControllers();
 
 builder.Services.AddHostedService<MessageBusSubscriber>();
@@ -35,5 +35,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+PrepDb.PrepPopulation(app);
 
 app.Run();

@@ -67,6 +67,8 @@ namespace PlatformService.Controllers
 
             try
             {
+                Console.WriteLine("Create platform");
+                Console.WriteLine("platformReadDto", platformReadDto.Name);
                 var platformPublishedDto = _mapper.Map<PlatformPublishedDto>(platformReadDto);
                 platformPublishedDto.Event = "Platform_Published";
                 _messageBusClient.PublishNewPlatform(platformPublishedDto);
